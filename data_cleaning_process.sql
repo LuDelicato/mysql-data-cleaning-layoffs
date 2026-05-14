@@ -117,3 +117,28 @@ AND percentage_laid_off IS NULL;
 
 -- Final view of the cleaned dataset.
 SELECT * FROM layoffs_staging2;
+
+-- EXPLORATORY DATA ANALYSIS (EDA)
+
+-- 1. Rolling Total of Layoffs per Month
+WITH Rolling_Total AS (
+  SELECT SUBSTRING(`date`, 1, 7) as month, SUM(total_laid_off) as total_off
+  FROM layoffs_staging2
+  WHERE SUBSTRING(`date`, 1, 7) IS NOT NULL
+  GROUP BY month
+  ORDER BY 1 ASC
+)
+SELECT month, total_off, SUM(total_off) OVER(ORDER BY month) as rolling_total
+FROM Rolling_Total;
+
+-- 2. Ranking Top 5 Companies with most Layoffs per Year
+WITH Company_Year AS (
+  SELECT company, YEAR(`date`) as years, SUM(total_laid_off) as total_laid_off
+  FROM layoffs_staging2
+  GROUP BY company, YEAR(`date`)
+), Company_Year_Rank AS (
+  SELECT *, DENSE_RANK() OVER (PARTITION BY years ORDER BY total_laid_off DESC) as ranking
+  FROM Company_Year
+  WHERE years IS NOT NULL
+)
+SELECT * FROM Company_Year_Rank WHERE ranking <= 5;
