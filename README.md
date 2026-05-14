@@ -1,41 +1,56 @@
-# Data Cleaning in SQL - World Layoffs Dataset
+# Data Engineering & Analysis: World Layoffs Dataset
 
 ## Project Overview
-This project involves a comprehensive data cleaning process of a raw dataset containing global company layoffs. The primary objective was to transform inconsistent and unorganized data into a structured, reliable format suitable for exploratory data analysis and reporting.
+This project involves a full ETL (Extract, Transform, Load) pipeline and Exploratory Data Analysis (EDA) of a global company layoffs dataset. The goal was to transform over 2,000 messy records into a clean, query-ready format and then extract strategic business insights regarding global layoff trends from 2020 to 2023.
 
 ## Technologies Used
 * **Database:** MySQL
 * **Tool:** MySQL Workbench
 * **Language:** SQL
 
-## Data Cleaning Steps
-The cleaning process was divided into four key phases to ensure data integrity:
+---
+
+## Phase 1: Data Cleaning (ETL)
+The cleaning process was structured into five phases to ensure 100% data integrity:
 
 ### 1. Staging Table Creation
-A staging table was created to preserve the original raw data. All transformations were performed on this copy to ensure that the source data remained untouched and available for recovery if needed.
+I created a sandbox environment (`layoffs_staging`) to perform transformations. This ensures the original "Source of Truth" remains untouched, a best practice in data engineering.
 
 ### 2. Duplicate Removal
-Since the dataset lacked a unique primary key, duplicates were identified using a `CTE` (Common Table Expression) and the `ROW_NUMBER()` window function partitioned across all columns. Verified duplicates were then removed from the database.
+Lacking a unique ID, I utilized a **CTE** and the `ROW_NUMBER()` window function partitioned across all columns. After identifying duplicates, I purged them and immediately dropped the auxiliary helper column to keep the schema lean.
 
 ### 3. Standardization
-* **String Cleaning:** Applied `TRIM` to remove leading and trailing whitespaces from company names.
-* **Industry Unification:** Standardized various labels (e.g., "Crypto", "CryptoCurrency") into a single consistent category.
-* **Data Typing:** Converted the `date` column from a `TEXT` format into a proper `DATE` type using `STR_TO_DATE` to enable time-series analysis.
-* **Geographical Correction:** Fixed inconsistencies in country names, such as removing trailing periods.
+* **Company & Country:** Applied `TRIM` and fixed geographical inconsistencies (e.g., removing trailing periods in "United States.").
+* **Industry Unification:** Consolidated variations (like "Crypto" vs "CryptoCurrency") into single master labels.
+* **Data Typing:** Converted the `date` column from `TEXT` to a proper `DATE` type using `STR_TO_DATE`.
 
 ### 4. Handling Nulls and Blanks
-* **Data Recovery:** Populated missing `industry` values by performing a `Self-Join`, matching companies with existing entries that had valid data.
-* **Data Quality Filter:** Removed records where both `total_laid_off` and `percentage_laid_off` were null, as these entries provided no actionable insights for this project's scope.
+* **Data Recovery:** Implemented a **Self-Join** to recover missing `industry` values by matching companies with existing valid records.
+* **Quality Filter:** Removed records where both `total_laid_off` and `percentage_laid_off` were NULL, as they provided no actionable insights.
+
+---
+
+## Phase 2: Exploratory Data Analysis (EDA)
+After cleaning, I explored the data to answer key business questions:
+
+### 1. Rolling Totals & Momentum
+By combining **CTEs** with **Window Functions**, I calculated the cumulative rolling total of layoffs month-over-month. 
+* **Insight:** Identified the specific months in late 2022 and early 2023 where the volume of layoffs accelerated to critical mass.
+
+### 2. Global Rankings by Year
+I utilized two layers of **CTEs** and `DENSE_RANK()` to isolate the Top 5 companies with the most layoffs for each year (2020-2023).
+* **Insight:** Discovered a shift from COVID-hit sectors (Travel/Retail) in 2020 to massive Big Tech restructuring (Google/Amazon/Microsoft) in 2023.
+
+---
 
 ## Key SQL Techniques Demonstrated
-* **Window Functions:** `ROW_NUMBER()` for duplicate identification.
-* **CTEs:** For structured and readable query logic.
-* **Self-Joins:** For data recovery and population.
-* **Schema Modification:** `ALTER TABLE` and `MODIFY COLUMN` for data type optimization.
-* **Data Transformation:** `STR_TO_DATE`, `TRIM`, and `LIKE` operators.
+* **Advanced Window Functions:** `ROW_NUMBER()`, `DENSE_RANK()`, and `SUM() OVER()`.
+* **Complex Logic:** Multiple **CTEs** and **Self-Joins**.
+* **ETL Best Practices:** Staging environments and schema optimization.
+* **Data Storytelling:** Translating raw query results into business trends.
 
-## Final Result
-The final dataset is cleaned, standardized, and optimized. The number of records was reduced to unique, high-quality entries, ensuring that any future analysis is based on accurate and consistent information.
+## Final Reflections
+This project was a major milestone in strengthening my SQL foundations. My biggest challenge was mastering the interaction between CTEs and Window Functions. I've learned that data cleaning isn't just about deleting rows; it's about making strategic decisions to preserve data quality and preparing it to tell a story.
 
 ---
 
